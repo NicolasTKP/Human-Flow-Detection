@@ -1,0 +1,5 @@
+train: ./images/train
+val: ./images/val
+
+nc: 1  # Number of classes (only "human")
+names: ["human"]  # Class name

@@ -1,25 +1,22 @@
-import kagglehub
-from PIL import Image
-import os
-import matplotlib.pyplot as plt
+from ultralytics import YOLO
 import cv2
 
-path = r"C:\Users\USER\.cache\kagglehub\datasets\constantinwerner\human-detection-dataset\versions\5\human detection dataset\0"
-files = os.listdir(path)
+model = YOLO(".\\runs\\detect\\train\\weights\\best.pt")
+# results = model("186.png", save=True, conf=0.5)
 
 
-for img_file in files[:5]:  # Show first 5 images
-    img_path = os.path.join(path, img_file)
-    image = cv2.imread(img_path)
-    cv2.imshow("Image", image)  # Display image
-    cv2.waitKey(1000)  # Wait for 1 second (1000 ms)
-    cv2.destroyAllWindows()  # Close the window
+cap = cv2.VideoCapture(0) 
+while cap.isOpened():
+    ret, frame = cap.read()
+    if not ret:
+        break
 
+    results = model(frame, conf=0.5) #predict
 
-for img_file in files[:5]:  # Show first 5 images
-    img_path = os.path.join(path, img_file)
-    image = Image.open(img_path)
+    cv2.imshow("Human Detection", results[0].plot())
 
-    plt.imshow(image)
-    plt.axis("off")  # Hide axes
-    plt.show()
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
+
+cap.release()
+cv2.destroyAllWindows()
