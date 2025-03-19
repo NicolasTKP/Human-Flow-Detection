@@ -23,7 +23,7 @@ You might encounter error while drawing the bound due to returning float value i
 The training dataset structure should be as below:
 
 ```kotlin
-dataset/
+datasets/
 │── images/
 │   ├── train/
 │   │   ├── image1.jpg
