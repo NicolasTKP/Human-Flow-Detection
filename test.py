@@ -61,7 +61,7 @@ while cap.isOpened():
 
                 for existing_id, stored_embedding in person_embeddings.items():
                     similarity = cosine(embedding, stored_embedding)
-                    if similarity < 0.3:  # Threshold for cosine similarity (smaller = more similar)
+                    if similarity < 0.45:  # Threshold for cosine similarity (smaller = more similar)
                         best_match_id = existing_id
                         best_similarity = similarity
 
