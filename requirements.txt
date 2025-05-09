@@ -6,3 +6,4 @@ torch
 torchreid
 gdown
 tensorboard
+bs4
