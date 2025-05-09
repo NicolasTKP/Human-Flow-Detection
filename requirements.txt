@@ -1,3 +1,8 @@
 opencv-python
 ultralytics
 labelImg
+deep_sort_realtime
+torch
+torchreid
+gdown
+tensorboard

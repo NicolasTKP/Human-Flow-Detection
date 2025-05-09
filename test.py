@@ -3,7 +3,16 @@ import cv2
 from deep_sort_realtime.deepsort_tracker import DeepSort
 from torchreid.reid.utils import FeatureExtractor
 from scipy.spatial.distance import cosine
+from bs4 import BeautifulSoup
 
+# Load model and parameters
+with open('./parameter.xml', 'r') as f:
+    xml = f.read()
+Bs_data = BeautifulSoup(xml, "xml")
+
+inference_threshold = float(Bs_data.find('inference_threshold').text)
+feature_extraction_threshold = float(Bs_data.find('feature_extraction_threshold').text)
+print(f"Thresholds: {inference_threshold}, {feature_extraction_threshold}")
 
 model = YOLO(".\\runs\\detect\\train\\weights\\best.pt")
 
@@ -23,7 +32,7 @@ while cap.isOpened():
     if not ret:
         break
 
-    results = model(frame, conf=0.5)
+    results = model(frame, conf=inference_threshold) #Threhold for confidence score
     if len(results) == 0 or len(results[0].boxes) == 0:
         cv2.putText(frame, f"Human Detected: {len(person_embeddings)}", (10,40),
                         cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
@@ -61,7 +70,7 @@ while cap.isOpened():
 
                 for existing_id, stored_embedding in person_embeddings.items():
                     similarity = cosine(embedding, stored_embedding)
-                    if similarity < 0.45:  # Threshold for cosine similarity (smaller = more similar)
+                    if similarity < feature_extraction_threshold:  # Threshold for cosine similarity (smaller = more similar)
                         best_match_id = existing_id
                         best_similarity = similarity
 

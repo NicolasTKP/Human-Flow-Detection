@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<parameters>
+    <inference_threshold>0.5</threshold>
+    <feature_extraction_threshold>0.45</inference_delay>
+</parameters>
