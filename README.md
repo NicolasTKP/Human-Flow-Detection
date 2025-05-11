@@ -40,4 +40,20 @@ datasets/
         ├── image4.txt
 ```
 
-**You have to modify the data.yaml to ensure the data path is correct.**
+**You have to modify the data.yaml under `model_training/` to ensure the data path is correct.**
+
+## Structure of Human-Flow-Detection
+
+This repository contains of two system engine with different architecture. The structure of engine files is as listed below:
+
+```python
+engines/
+    engine.py # Application of multiple cameras tracking
+    zone.py # Application of zone partition and zone tracking
+```
+
+Both engines required two arguments, camera_ID and camera_Index. **Camera_ID** is a camera identifier that could be set as whatever value. **Camera_Index** is the system camera code, it should strictly following the default setting in order for OpenCV to capture the camera.
+
+This repository also contains of the model training codes in `train.py` under `model_training/`
+
+
