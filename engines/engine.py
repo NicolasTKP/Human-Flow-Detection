@@ -8,7 +8,7 @@ import threading
 import time
 
 # Load model and parameters
-with open('./parameter.xml', 'r') as f:
+with open('engines\parameter.xml', 'r') as f:
     xml = f.read()
 Bs_data = BeautifulSoup(xml, "xml")
 
@@ -24,12 +24,9 @@ extractor = FeatureExtractor(
     device='cpu'  # Change to 'cpu' if GPU is unavailable
 )
 
-ZONE_A = (0, 0, 200, 600)
-ZONE_B = (450, 0, 700, 600)
-
 person_embeddings = {}  # Format: {track_id: (embedding, timestamp, cam_id)}
 embedding_lock = threading.Lock() #To ensure only one thread accesses the embeddings at a time
-person_last_zone = {}
+person_last_seen = {}  # {track_id: (last_cam_id, timestamp)}
 total_transitions = 0
 
 def process_camera(cam_id, camera_index):
@@ -45,22 +42,12 @@ def process_camera(cam_id, camera_index):
             break
 
         results = model(frame, conf=inference_threshold)  # Threshold for confidence score
-        frame_with_yolo = results[0].plot()
-
-        cv2.putText(frame_with_yolo, f"Human Detected: {len(person_embeddings)}", (10, 40),
-                    cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
-        cv2.putText(frame_with_yolo, f"Cross-Zone: {total_transitions}", (10, 100),
-                    cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
-        cv2.rectangle(frame_with_yolo, ZONE_A[:2], ZONE_A[2:], (0, 255, 0), 2)
-        cv2.putText(frame_with_yolo, "Zone A", (ZONE_A[0], ZONE_A[1] - 10),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
-
-        cv2.rectangle(frame_with_yolo, ZONE_B[:2], ZONE_B[2:], (0, 0, 255), 2)
-        cv2.putText(frame_with_yolo, "Zone B", (ZONE_B[0], ZONE_B[1] - 10),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 2)
-        
         if len(results) == 0 or len(results[0].boxes) == 0:
-            cv2.imshow(f"Human Tracking Cam {cam_id}", frame_with_yolo)
+            cv2.putText(frame, f"Human Detected: {len(person_embeddings)}", (10, 40),
+                        cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
+            cv2.putText(frame, f"Cross-Zone: {total_transitions}", (10, 100),
+                            cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
+            cv2.imshow(f"Human Tracking Cam {cam_id}", frame)
             if cv2.waitKey(1) & 0xFF == ord("q"):
                 break
             continue
@@ -76,29 +63,12 @@ def process_camera(cam_id, camera_index):
                     detections.append(([x1, y1, x2, y2], conf, "human"))
 
         tracked_objects = tracker.update_tracks(detections, frame=frame)
+        frame_with_yolo = results[0].plot()
 
         for track in tracked_objects:
             if track.is_confirmed():
                 track_id = track.track_id
                 x1, y1, x2, y2 = map(int, track.to_tlbr())
-                center_x = int((x1 + x2) / 2)
-                center_y = int((y1 + y2) / 2)
-
-                # Determine current zone
-                current_zone = None
-                if ZONE_A[0] <= center_x <= ZONE_A[2] and ZONE_A[1] <= center_y <= ZONE_A[3]:
-                    current_zone = 'A'
-                elif ZONE_B[0] <= center_x <= ZONE_B[2] and ZONE_B[1] <= center_y <= ZONE_B[3]:
-                    current_zone = 'B'
-
-                # Check for zone change
-                if current_zone is not None:
-                    last_zone = person_last_zone.get(track_id)
-                    if last_zone and last_zone != current_zone:
-                        total_transitions += 1
-                        cv2.putText(frame_with_yolo, f"Cross-Zone: {total_transitions}", (10, 100),
-                                    cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
-                    person_last_zone[track_id] = current_zone
 
                 person_crop = frame[y1:y2, x1:x2]
                 if person_crop.size != 0:
@@ -119,12 +89,23 @@ def process_camera(cam_id, camera_index):
                             track_id = best_match_id
                         else:
                             person_embeddings[track_id] = embedding
-                            cv2.putText(frame_with_yolo, f"Human Detected: {len(person_embeddings)}", (10, 40),
-                                        cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
+                        
+                        # Add total_transitions by 1 if the person is seen in a different camera
+                        current_time = time.time()
+                        if track_id in person_last_seen:
+                            last_cam_id, last_seen_time = person_last_seen[track_id]
+                            if last_cam_id != cam_id:
+                                total_transitions += 1
+
+                        # Update last seen info
+                        person_last_seen[track_id] = (cam_id, current_time)
 
                 cv2.putText(frame_with_yolo, f"ID: {track_id}", (x1+150, y1 - 10),
                             cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 0, 0), 2)
-                              
+                cv2.putText(frame_with_yolo, f"Human Detected: {len(person_embeddings)}", (10, 40),
+                            cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
+                cv2.putText(frame_with_yolo, f"Cross-Zone: {total_transitions}", (10, 100),
+                            cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
 
         cv2.imshow(f"Human Tracking Cam {cam_id}", frame_with_yolo)
 
@@ -137,7 +118,10 @@ def process_camera(cam_id, camera_index):
 
 if __name__ == "__main__":
     thread0 = threading.Thread(target=process_camera, args=(0, 0))
+    thread1 = threading.Thread(target=process_camera, args=(1, 1))
 
     thread0.start()
+    thread1.start()
 
     thread0.join()
+    thread1.join()
