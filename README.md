@@ -1,6 +1,6 @@
 # Human-Flow-Detection Project
 
-This is an human flow detection project that use **YOLOv8n** Model
+This is an human flow detection project that use **YOLOv8n** model as detector, **DeepSORT** as tracker, and **OSNet** with **Torcheid** as person Re-ID model.
 
 ## Installation
 
