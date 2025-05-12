@@ -20,8 +20,8 @@ model = YOLO(".\\runs\\detect\\train\\weights\\best.pt")
 
 extractor = FeatureExtractor(
     model_name='osnet_x1_0',
-    model_path=None,  # If using a pretrained model
-    device='cpu'  # Change to 'cpu' if GPU is unavailable
+    model_path=None,  # Use a pretrained model
+    device='cpu'  
 )
 
 ZONE_A = (0, 0, 200, 600)
@@ -29,7 +29,7 @@ ZONE_B = (450, 0, 700, 600)
 
 person_embeddings = {}  # Format: {track_id: (embedding, timestamp, cam_id)}
 embedding_lock = threading.Lock() #To ensure only one thread accesses the embeddings at a time
-person_last_zone = {}
+person_last_zone = {} # Format: {track_id: zone}
 total_transitions = 0
 
 def process_camera(cam_id, camera_index):
@@ -136,7 +136,7 @@ def process_camera(cam_id, camera_index):
 
 
 if __name__ == "__main__":
-    thread0 = threading.Thread(target=process_camera, args=(0, 0))
+    thread0 = threading.Thread(target=process_camera, args=(0, 1))
 
     thread0.start()
 

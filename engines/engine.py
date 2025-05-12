@@ -20,8 +20,8 @@ model = YOLO(".\\runs\\detect\\train\\weights\\best.pt")
 
 extractor = FeatureExtractor(
     model_name='osnet_x1_0',
-    model_path=None,  # If using a pretrained model
-    device='cpu'  # Change to 'cpu' if GPU is unavailable
+    model_path=None,  # Use a pretrained model
+    device='cpu' 
 )
 
 person_embeddings = {}  # Format: {track_id: (embedding, timestamp, cam_id)}
