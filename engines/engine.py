@@ -8,7 +8,7 @@ import threading
 import time
 
 # Load model and parameters
-with open('engines\parameter.xml', 'r') as f:
+with open('engines\\parameter.xml', 'r') as f:
     xml = f.read()
 Bs_data = BeautifulSoup(xml, "xml")
 
@@ -81,7 +81,7 @@ def process_camera(cam_id, camera_index):
                     with embedding_lock:
                         for existing_id, stored_embedding in person_embeddings.items():
                             similarity = cosine(embedding, stored_embedding)
-                            if similarity < feature_extraction_threshold: # Threshold for similarity (lower = more similar)
+                            if similarity < feature_extraction_threshold and similarity < best_similarity: # Threshold for similarity (lower = more similar)
                                 best_match_id = existing_id
                                 best_similarity = similarity
 

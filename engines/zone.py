@@ -6,9 +6,10 @@ from scipy.spatial.distance import cosine
 from bs4 import BeautifulSoup
 import threading
 import time
+import torch
 
 # Load model and parameters
-with open('engines\parameter.xml', 'r') as f:
+with open('engines\\parameter.xml', 'r') as f:
     xml = f.read()
 Bs_data = BeautifulSoup(xml, "xml")
 
@@ -21,7 +22,7 @@ model = YOLO(".\\runs\\detect\\train\\weights\\best.pt")
 extractor = FeatureExtractor(
     model_name='osnet_x1_0',
     model_path=None,  # Use a pretrained model
-    device='cpu'  
+    device='cpu'  # Use GPU if available
 )
 
 ZONE_A = (0, 0, 200, 600)
@@ -34,7 +35,7 @@ total_transitions = 0
 
 def process_camera(cam_id, camera_index):
     global total_transitions
-    tracker = DeepSort(max_age=1, embedder="torchreid", embedder_gpu=True)
+    tracker = DeepSort(max_age=1, embedder="torchreid", embedder_gpu=False) # Set to False for CPU
     cap = cv2.VideoCapture(camera_index) 
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 640) #Set the reslution of the camera
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
@@ -111,7 +112,7 @@ def process_camera(cam_id, camera_index):
                     with embedding_lock:
                         for existing_id, stored_embedding in person_embeddings.items():
                             similarity = cosine(embedding, stored_embedding)
-                            if similarity < feature_extraction_threshold: # Threshold for similarity (lower = more similar)
+                            if similarity < feature_extraction_threshold and similarity < best_similarity: # Threshold for similarity (lower = more similar)
                                 best_match_id = existing_id
                                 best_similarity = similarity
 
@@ -136,7 +137,7 @@ def process_camera(cam_id, camera_index):
 
 
 if __name__ == "__main__":
-    thread0 = threading.Thread(target=process_camera, args=(0, 1))
+    thread0 = threading.Thread(target=process_camera, args=(0, 0))
 
     thread0.start()
 
