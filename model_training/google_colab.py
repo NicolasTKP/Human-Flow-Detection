@@ -1,7 +1,7 @@
 from google.colab import drive
 drive.mount('/content/drive')
 
-pip install ultralytics
+!pip install ultralytics
 
 import ultralytics
 ultralytics.checks()

@@ -8,7 +8,7 @@ import threading
 import time
 import torch
 
-# Load model and parameters
+# Load model and parametersq
 with open('engines\\parameter.xml', 'r') as f:
     xml = f.read()
 Bs_data = BeautifulSoup(xml, "xml")
