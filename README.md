@@ -54,6 +54,8 @@ engines/
 
 Both engines required two arguments, camera_ID and camera_Index. **Camera_ID** is a camera identifier that could be set as whatever value. **Camera_Index** is the system camera code, it should strictly following the default setting in order for OpenCV to capture the camera.
 
-This repository also contains of the model training codes in `train.py` under `model_training/`
+You may edit the `parameter.xml` to adjust the inference threshold and feature extraction threshold.
+
+This repository also contains of the model training codes in `train.py` under `model_training/`.
 
 
